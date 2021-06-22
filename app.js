@@ -20,11 +20,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/books", (req, res) => {
-    console.log('book end point', req.body.token)
-    jwt.verify(req.body.token, process.env.ACCESS_TOKEN_SECRET, async (err, authData) => {
+app.get("/books", verifyToken, (req, res) => {
+    jwt.verify(req.token, process.env.ACCESS_TOKEN_SECRET, async (err, authData) => {
         if(err) {
-          res.status(403).json({"error": "Invlaid Token"});
+          res.status(403).json({"error": err});
         } else {
             const books = await BookController.seeAllBooks();
             res.status(200).json({books: books, user: authData});
@@ -33,10 +32,19 @@ app.get("/books", (req, res) => {
 });
 
 app.delete("books/:title", async (req, res) => {
-    console.log(req.params.title);
     await BookController.deleteBook(req.params.title);
     res.redirect(301, "/");
 });
+
+app.post("books", async (req, res) => {
+    try {
+        let response = await BookController.addBook(req.body);
+
+        res.send(200).json({status: "books added successfully"});
+    }catch(err) {
+        res.status(401).json({error: "Error in adding book"});
+    }
+})
 
 app.use("/auth", router);
 

@@ -24,7 +24,7 @@ async function addBook({title, price, category, authors}) {
                 authors: authors
             });
             await book.save();
-            return 'Book added successfully';
+            return true;
         }
         else {
             const categories = await CategoryModel.find();

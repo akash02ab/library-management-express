@@ -20,9 +20,7 @@ const refreshTokens = [];
 
 const verifyToken = (req, res, next) => {
     // Get auth header value
-    console.log(req.headers);
     const bearerHeader = req.headers["authorization"];
-    console.log(bearerHeader);
     // Check if bearer is undefined
     if (typeof bearerHeader !== "undefined") {
         // Split at the space
@@ -53,19 +51,18 @@ router.post("/signup", multipart.single("avatar"), async (req, res) => {
 
 router.post("/signin", async (req, res) => {
     let loginResult = await userController.signIn(req.body);
-
+    
     if (loginResult.status) {
         const payload = {
             email: loginResult.result.email,
-            time: Date.now(),
         };
 
         let refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
-            expiresIn: process.env.REFRESH_TOKEN_EXP_TIME,
+            expiresIn: process.env.REFRESH_TOKEN_EXPIRE_TIME,
         });
 
         let accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: process.env.ACCESS_TOKEN_EXP_TIME,
+            expiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME,
         });
 
         refreshTokens.push(refreshToken);
@@ -77,9 +74,9 @@ router.post("/signin", async (req, res) => {
 });
 
 router.post('/token', async (req, res) => {
-    const { token , email } = req.body;
-    console.log(req.body)
-    if(!token || !refreshTokens.includes(token)) {
+    const { refresh_token , email } = req.body;
+    
+    if(!refresh_token || !refreshTokens.includes(refresh_token)) {
         return res.status(401).json({error: "Access Denied"});
     }
 
@@ -88,7 +85,7 @@ router.post('/token', async (req, res) => {
     }
 
     let accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: process.env.ACCESS_TOKEN_EXP_TIME,
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME,
     });
 
     res.status(200).json({access_token: accessToken});
